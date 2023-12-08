@@ -5,6 +5,10 @@
   "types": "dist/index.d.ts",
   "description": "",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Alex01aik/pp-nest-auth-module.git"
+  },
   "scripts": {
     "build": "tsc",
     "test": "echo \"OK\""
