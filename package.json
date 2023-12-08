@@ -1,10 +1,10 @@
 {
   "name": "pp-auth-module",
-  "version": "1.0.18",
+  "version": "1.0.19",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "description": "",
-  "license": "MIT",
+  "license": "UNLICENSED",
   "repository": {
     "type": "git",
     "url": "https://github.com/Alex01aik/pp-nest-auth-module.git"
