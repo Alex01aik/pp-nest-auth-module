@@ -1,22 +1,26 @@
-import { Inject, Injectable, UnauthorizedException } from '@nestjs/common';
-import { JwtService } from '@nestjs/jwt';
-import * as jwt from 'jsonwebtoken';
-import * as bcrypt from 'bcrypt';
-import { User } from '@prisma/client';
+import { Inject, Injectable, UnauthorizedException } from "@nestjs/common";
+import { JwtService } from "@nestjs/jwt";
+import * as jwt from "jsonwebtoken";
+import * as bcrypt from "bcrypt";
+import { DefaultUserType } from "./common/interface/DefaultUser";
 
 @Injectable()
-export class AuthService {
+export class AuthService<User> {
   constructor(
-    @Inject('UserService') private readonly userService: any,
-    private readonly jwtService: JwtService,
+    @Inject("UserService") private readonly userService: any,
+    private readonly jwtService: JwtService
   ) {}
 
   async getUserIdByRefreshToken(token: string): Promise<string> {
     const decodedToken = await jwt.verify(token, process.env.SECRET_KEY);
 
-    if (typeof decodedToken === 'string') {
+    if (
+      typeof decodedToken === "string" ||
+      decodedToken.tokenType !== "refresh"
+    ) {
       throw new UnauthorizedException();
     }
+
     const userId = (decodedToken as any)?.userId;
     const expirationDate = new Date(decodedToken.exp * 1000);
     const currentDate = new Date();
@@ -28,7 +32,10 @@ export class AuthService {
     return userId;
   }
 
-  async validateUser(username: string, password: string): Promise<User | null> {
+  async validateUser(
+    username: string,
+    password: string
+  ): Promise<(User & DefaultUserType) | null> {
     const user = await this.userService.findByUsername(username);
 
     if (user && (await bcrypt.compare(password, user.password))) {
@@ -47,16 +54,16 @@ export class AuthService {
   }
 
   async generateTokens(
-    user: User,
+    user: User & DefaultUserType
   ): Promise<{ accessToken: string; refreshToken: string }> {
     const accessTokenPayload = { userId: user.id, role: user.role };
-    const refreshTokenPayload = { userId: user.id, tokenType: 'refresh' };
+    const refreshTokenPayload = { userId: user.id, tokenType: "refresh" };
 
     const accessToken = await this.jwtService.signAsync(accessTokenPayload, {
-      expiresIn: '15m',
+      expiresIn: "15m",
     });
     const refreshToken = await this.jwtService.signAsync(refreshTokenPayload, {
-      expiresIn: '7d',
+      expiresIn: "7d",
     });
 
     return { accessToken, refreshToken };

@@ -1,14 +1,13 @@
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
-import { GqlExecutionContext } from '@nestjs/graphql';
-import { getUserDataFromAuthHeader } from '../utils/getUserDataFromAuthHeader';
-import { Reflector } from '@nestjs/core';
-import { UserRole } from '@prisma/client';
+import { Injectable, CanActivate, ExecutionContext } from "@nestjs/common";
+import { GqlExecutionContext } from "@nestjs/graphql";
+import { getUserDataFromAuthHeader } from "../utils/getUserDataFromAuthHeader";
+import { Reflector } from "@nestjs/core";
 
 @Injectable()
-export class RoleGuard implements CanActivate {
+export class RoleGuard<UserRole> implements CanActivate {
   constructor(private reflector: Reflector) {}
   canActivate(context: ExecutionContext): boolean {
-    const isAllowOwner = this.reflector.getAllAndOverride('isAllowOwner', [
+    const isAllowOwner = this.reflector.getAllAndOverride("isAllowOwner", [
       context.getHandler(),
       context.getClass(),
     ]);
@@ -16,11 +15,11 @@ export class RoleGuard implements CanActivate {
     const { headers } = ctx.getContext().req;
     const authHeader = headers.authorization;
 
-    const role = getUserDataFromAuthHeader(authHeader, 'role');
+    const role = getUserDataFromAuthHeader(authHeader, "role");
 
     const requiredRoles = this.reflector.getAllAndOverride<UserRole[]>(
-      'roles',
-      [context.getHandler(), context.getClass()],
+      "roles",
+      [context.getHandler(), context.getClass()]
     );
 
     if (!requiredRoles) {
@@ -28,7 +27,7 @@ export class RoleGuard implements CanActivate {
     }
 
     if (isAllowOwner) {
-      const userId = getUserDataFromAuthHeader(authHeader, 'userId');
+      const userId = getUserDataFromAuthHeader(authHeader, "userId");
       const argUserId = ctx.getArgs().id ?? ctx.getArgs().userId;
 
       if (

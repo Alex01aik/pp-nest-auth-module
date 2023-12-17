@@ -1,6 +1,6 @@
 {
   "name": "pp-auth-module",
-  "version": "1.0.19",
+  "version": "1.0.20",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "description": "",
@@ -18,12 +18,12 @@
     "@nestjs/jwt": "^10.2.0",
     "@nestjs/passport": "^10.0.3",
     "bcrypt": "^5.1.1",
+    "cookie-parser": "^1.4.6",
     "jsonwebtoken": "^9.0.2",
     "passport-jwt": "^4.0.1"
   },
   "devDependencies": {
     "@nestjs/testing": "^10.0.0",
-    "@prisma/client": "^5.7.0",
     "@types/jest": "^29.5.11",
     "@types/node": "^20.10.3",
     "prisma": "^5.7.0",

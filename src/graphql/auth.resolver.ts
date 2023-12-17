@@ -1,7 +1,6 @@
-import { Resolver, Query, Mutation, Args } from '@nestjs/graphql';
+import { Resolver, Query, Mutation, Args, Context } from '@nestjs/graphql';
 import { LoginArgs } from './args/LoginArgs';
-import { Tokens } from './outputs/Tokens';
-import { RefreshArgs } from './args/RefreshArgs';
+import { AccessToken } from './outputs/AccessToken';
 import { AuthService } from '../auth.service';
 import {
   BadRequestException,
@@ -10,34 +9,52 @@ import {
 } from '@nestjs/common';
 
 @Resolver()
-export class AuthResolver {
+export class AuthResolver<User> {
   constructor(
-    private readonly authService: AuthService,
+    private readonly authService: AuthService<User>,
     @Inject('UserService') private readonly userService: any,
   ) {}
-  @Query(() => Tokens)
-  async login(@Args() args: LoginArgs): Promise<Tokens> {
+
+  @Query(() => AccessToken)
+  async login(
+    @Args() args: LoginArgs,
+    @Context() ctx: any,
+  ): Promise<AccessToken> {
     const user = await this.authService.validateUser(args.email, args.password);
     if (!user) {
       throw new UnauthorizedException();
     }
     const tokens = await this.authService.generateTokens(user);
-    return tokens;
+    ctx.res.cookie('refreshToken', tokens.refreshToken, {
+      httpOnly: true,
+    });
+    return { accessToken: tokens.refreshToken };
   }
-  @Mutation(() => Tokens)
-  async register(@Args() args: LoginArgs): Promise<Tokens> {
+
+  @Mutation(() => AccessToken)
+  async register(
+    @Args() args: LoginArgs,
+    @Context() ctx: any,
+  ): Promise<AccessToken> {
     const user = await this.authService.createUser(args);
     if (!user) {
       throw new BadRequestException();
     }
     const tokens = await this.authService.generateTokens(user);
-    return tokens;
+    ctx.res.cookie('refreshToken', tokens.refreshToken, {
+      httpOnly: true,
+    });
+    return { accessToken: tokens.accessToken };
   }
-  @Query(() => Tokens)
-  async refresh(@Args() args: RefreshArgs): Promise<Tokens> {
-    const userId = await this.authService.getUserIdByRefreshToken(args.token);
+
+  @Query(() => AccessToken)
+  async refresh(@Context() ctx: any): Promise<AccessToken> {
+    console.log();
+    const userId = await this.authService.getUserIdByRefreshToken(
+      ctx.req.cookies.refreshToken,
+    );
     const user = await this.userService.findById(userId);
     const tokens = await this.authService.generateTokens(user);
-    return tokens;
+    return { accessToken: tokens.accessToken };
   }
 }
